@@ -86,3 +86,36 @@ def serialize_tool_output(value: Any) -> str:
         return json.dumps(value, ensure_ascii=False, default=str)
     except TypeError:
         return str(value)
+
+
+def none_if_blank(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    stripped = value.strip()
+    if not stripped:
+        return None
+    return stripped
+
+
+def resolve_request_model_name(request: Any) -> str:
+    raw = getattr(getattr(request, "agent", None), "model", "")
+    name = getattr(raw, "name", None)
+    if isinstance(name, str) and name:
+        return name
+    return str(raw)
+
+
+def extract_openai_output_text(raw_output: Any) -> str:
+    text_parts: List[str] = []
+    if not isinstance(raw_output, list):
+        return ""
+    for item in raw_output:
+        if not isinstance(item, dict):
+            continue
+        if item.get("type") == "message":
+            for content_item in item.get("content", []) or []:
+                if isinstance(content_item, dict) and content_item.get("type") in ("output_text", "text"):
+                    text_parts.append(str(content_item.get("text", "")))
+        elif item.get("type") in ("output_text", "text"):
+            text_parts.append(str(item.get("text", "")))
+    return "".join(text_parts)

@@ -326,6 +326,7 @@ class Runner:
         run_context: RunContext,
         tool_registry: ToolRegistry,
         tool_call: Any,
+        provider_name: Optional[str],
         arguments: Dict[str, Any],
         stream: Optional[RunStream],
         guardrail_records: List[GuardrailResult],
@@ -385,7 +386,7 @@ class Runner:
             output=output,
             duration_ms=duration_ms,
             approval=approval_state,
-            provider=run_context.agent.metadata.get("provider"),
+            provider=provider_name,
         )
         await cls._emit(
             stream,
@@ -537,6 +538,7 @@ class Runner:
                     run_context=run_context,
                     tool_registry=tool_registry,
                     tool_call=tool_call,
+                    provider_name=assistant_metadata.get("provider"),
                     arguments=tool_call.arguments,
                     stream=stream,
                     guardrail_records=guardrail_records,

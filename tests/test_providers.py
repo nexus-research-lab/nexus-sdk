@@ -85,6 +85,18 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(client.responses.calls[0]["tools"][0]["type"], "function")
         self.assertEqual(response.usage["input_tokens"], 11)
 
+    async def test_openai_provider_uses_model_config_name(self) -> None:
+        from rich_agent.models import ModelConfig, ModelRequest
+
+        client = FakeOpenAIClient()
+        provider = OpenAIProvider(client=client)
+        agent = Agent(name="calc", instructions="calc", model=ModelConfig(name="gpt-5.4", provider=provider))
+        request = ModelRequest(agent=agent, instructions="hi", latest_input="hello")
+
+        await provider.generate(request)
+
+        self.assertEqual(client.responses.calls[0]["model"], "gpt-5.4")
+
     async def test_anthropic_provider_formats_tool_result_messages(self) -> None:
         from rich_agent import tool
         from rich_agent.models import ModelRequest

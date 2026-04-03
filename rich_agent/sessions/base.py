@@ -38,3 +38,12 @@ class Session(ABC):
     @abstractmethod
     async def clear(self) -> None:
         raise NotImplementedError
+
+    async def close(self) -> None:
+        return None
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.close()

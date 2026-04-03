@@ -23,3 +23,6 @@ class InMemorySession(Session):
 
     async def clear(self) -> None:
         self.messages.clear()
+
+    async def close(self) -> None:
+        return None

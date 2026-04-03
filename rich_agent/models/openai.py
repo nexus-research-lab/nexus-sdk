@@ -1,8 +1,19 @@
 import json
+import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from .base import ModelRequest, ModelResponse, ModelToolCall, model_to_dict, normalize_usage, serialize_tool_output
+from .base import (
+    ModelRequest,
+    ModelResponse,
+    ModelToolCall,
+    extract_openai_output_text,
+    model_to_dict,
+    none_if_blank,
+    normalize_usage,
+    resolve_request_model_name,
+    serialize_tool_output,
+)
 
 
 @dataclass
@@ -15,6 +26,15 @@ class OpenAIProvider:
     max_retries: Optional[int] = None
     client: Any = None
     _client: Any = field(default=None, init=False, repr=False)
+
+    @classmethod
+    def from_env(cls) -> "OpenAIProvider":
+        return cls(
+            api_key=none_if_blank(os.getenv("OPENAI_API_KEY")),
+            base_url=none_if_blank(os.getenv("OPENAI_BASE_URL")),
+            organization=none_if_blank(os.getenv("OPENAI_ORG_ID")),
+            project=none_if_blank(os.getenv("OPENAI_PROJECT_ID")),
+        )
 
     def _get_client(self) -> Any:
         if self.client is not None:
@@ -37,6 +57,15 @@ class OpenAIProvider:
                 kwargs["max_retries"] = self.max_retries
             self._client = AsyncOpenAI(**kwargs)
         return self._client
+
+    async def close(self) -> None:
+        client = self.client or self._client
+        if client is None:
+            return
+        if hasattr(client, "close"):
+            maybe_result = client.close()
+            if hasattr(maybe_result, "__await__"):
+                await maybe_result
 
     def _message_to_input_item(self, message: Any) -> List[Dict[str, Any]]:
         content = getattr(message, "content", None)
@@ -90,7 +119,7 @@ class OpenAIProvider:
 
     async def generate(self, request: ModelRequest) -> ModelResponse:
         client = self._get_client()
-        model_name = str(getattr(request.agent, "model", ""))
+        model_name = resolve_request_model_name(request)
         if "/" in model_name:
             model_name = model_name.split("/", 1)[1]
         params: Dict[str, Any] = {
@@ -125,7 +154,7 @@ class OpenAIProvider:
             )
 
         return ModelResponse(
-            message=getattr(response, "output_text", ""),
+            message=getattr(response, "output_text", "") or extract_openai_output_text(raw_output),
             tool_calls=tool_calls,
             step_id=getattr(response, "id", None),
             metadata={"provider": "openai"},

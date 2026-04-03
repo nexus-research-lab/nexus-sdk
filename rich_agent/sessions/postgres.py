@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from typing import Any, List, Optional
 
 from ..result import MessageItem
@@ -11,6 +12,7 @@ class PostgresSession(Session):
     url: str = ""
     session_id: Optional[str] = None
     table_name: str = "rich_agent_messages"
+    ttl_seconds: Optional[int] = None
     connection: Any = None
     _initialized: bool = field(default=False, init=False, repr=False)
 
@@ -38,7 +40,9 @@ class PostgresSession(Session):
                     role TEXT NOT NULL,
                     content JSONB NOT NULL,
                     name TEXT,
-                    metadata JSONB NOT NULL DEFAULT '{}'::jsonb
+                    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    expires_at TIMESTAMPTZ NULL
                 )
                 """
                 % self.table_name
@@ -55,6 +59,7 @@ class PostgresSession(Session):
                 SELECT role, content, name, metadata
                 FROM %s
                 WHERE session_id = %%s
+                  AND (expires_at IS NULL OR expires_at > NOW())
                 ORDER BY id DESC
                 LIMIT %%s
                 """
@@ -74,8 +79,8 @@ class PostgresSession(Session):
         async with conn.cursor() as cur:
             await cur.executemany(
                 """
-                INSERT INTO %s (session_id, role, content, name, metadata)
-                VALUES (%%s, %%s, %%s::jsonb, %%s, %%s::jsonb)
+                INSERT INTO %s (session_id, role, content, name, metadata, expires_at)
+                VALUES (%%s, %%s, %%s::jsonb, %%s, %%s::jsonb, %%s)
                 """
                 % self.table_name,
                 [
@@ -85,6 +90,7 @@ class PostgresSession(Session):
                         json.dumps(message.content, ensure_ascii=False, default=str),
                         message.name,
                         json.dumps(message.metadata, ensure_ascii=False, default=str),
+                        None if self.ttl_seconds is None else datetime.utcnow() + timedelta(seconds=int(self.ttl_seconds)),
                     )
                     for message in messages
                 ],
@@ -97,3 +103,10 @@ class PostgresSession(Session):
         async with conn.cursor() as cur:
             await cur.execute("DELETE FROM %s WHERE session_id = %%s" % self.table_name, (self.session_id,))
         await conn.commit()
+
+    async def close(self) -> None:
+        if self.connection is None:
+            return
+        await self.connection.close()
+        self.connection = None
+        self._initialized = False

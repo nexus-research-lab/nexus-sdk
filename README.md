@@ -24,6 +24,14 @@ pip install -e '.[openai,anthropic,azure,sessions]'
 - `.[azure]`
 - `.[sessions]`
 
+## Environment Template
+
+```sh
+cp .env.example .env
+```
+
+`examples/provider_smoke.py` 会自动读取项目根目录下的 `.env`。
+
 这不是一个“已经接好 OpenAI/Anthropic 全套 API”的成品版，而是一个可以继续往里填企业能力的基础 runtime。
 
 ## 目录
@@ -103,6 +111,36 @@ azure_agent = Agent(
 - `anthropic/claude-sonnet-4-5`
 - `azure/my-deployment`
 
+也可以直接从环境变量构建 provider：
+
+```python
+from rich_agent.models import AnthropicProvider, AzureProvider, OpenAIProvider
+
+openai_provider = OpenAIProvider.from_env()
+anthropic_provider = AnthropicProvider.from_env()
+azure_provider = AzureProvider.from_env()
+```
+
+目前支持的环境变量：
+
+- OpenAI: `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_ORG_ID`, `OPENAI_PROJECT_ID`
+- Anthropic: `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_VERSION`
+- Azure OpenAI: `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `OPENAI_API_VERSION`, `AZURE_OPENAI_AD_TOKEN`, `AZURE_OPENAI_USE_ENTRA_ID`
+
+对于 Anthropic 兼容网关，也支持从这些变量里取默认模型：
+
+- `ANTHROPIC_MODEL`
+- `ANTHROPIC_DEFAULT_SONNET_MODEL`
+- `ANTHROPIC_REASONING_MODEL`
+
+可以直接跑一个真实联调 smoke test：
+
+```sh
+PYTHONPATH=. python3 examples/provider_smoke.py --provider openai --model gpt-4.1
+PYTHONPATH=. python3 examples/provider_smoke.py --provider anthropic --model claude-sonnet-4-20250514
+PYTHONPATH=. python3 examples/provider_smoke.py --provider azure --model your-deployment-name
+```
+
 ## Sessions
 
 ```python
@@ -119,8 +157,10 @@ secure_session = EncryptedSession(wrapped=sqlite_session, secret_key=key)
 result = Runner.run_sync(agent, "hello", config=RunConfig(session=secure_session))
 ```
 
+`RedisSession` 现在支持 `ttl_seconds`，`Session` 基类也提供了 `close()` 和 async context manager，便于在服务生命周期里显式释放连接。
+
 ## 现阶段边界
 
 - 多 Provider 网关路由策略还没有做自动决策层，但三家 provider 已经具备真实 SDK 接入点。
 - `run_stream()` 已支持事件流和审批回填，但首版没有接 WebSocket / HTTP transport。
-- Redis / Postgres / Encrypted session 已补上基础实现；生产级连接池、迁移和 TTL 策略还可以继续往深做。
+- Redis / Postgres / Encrypted session 已补上基础实现，Redis 具备 TTL，Session 也支持显式 close；如果继续往生产推进，下一步适合补 migrations、连接池与后台清理策略。

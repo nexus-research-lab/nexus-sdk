@@ -11,6 +11,7 @@ class RedisSession(Session):
     url: str = ""
     session_id: Optional[str] = None
     key_prefix: str = "rich_agent:session"
+    ttl_seconds: Optional[int] = None
     client: Any = None
     _client: Any = field(default=None, init=False, repr=False)
 
@@ -57,7 +58,21 @@ class RedisSession(Session):
             for message in messages
         ]
         await client.rpush(self.redis_key, *payloads)
+        if self.ttl_seconds is not None:
+            await client.expire(self.redis_key, self.ttl_seconds)
 
     async def clear(self) -> None:
         client = self._get_client()
         await client.delete(self.redis_key)
+
+    async def close(self) -> None:
+        client = self.client or self._client
+        if client is None:
+            return
+        if hasattr(client, "aclose"):
+            await client.aclose()
+            return
+        if hasattr(client, "close"):
+            maybe_result = client.close()
+            if hasattr(maybe_result, "__await__"):
+                await maybe_result

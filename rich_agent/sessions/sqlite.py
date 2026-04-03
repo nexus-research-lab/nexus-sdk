@@ -69,3 +69,6 @@ class SQLiteSession(Session):
     async def clear(self) -> None:
         with sqlite3.connect(self._path) as conn:
             conn.execute("DELETE FROM messages WHERE session_id = ?", (self.session_id,))
+
+    async def close(self) -> None:
+        return None

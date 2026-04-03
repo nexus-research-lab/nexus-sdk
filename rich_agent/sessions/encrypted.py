@@ -62,3 +62,6 @@ class EncryptedSession(Session):
 
     async def clear(self) -> None:
         await self.wrapped.clear()
+
+    async def close(self) -> None:
+        await self.wrapped.close()
