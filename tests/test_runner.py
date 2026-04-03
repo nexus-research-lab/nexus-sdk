@@ -95,13 +95,41 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / "AGENTS.md").write_text("always-on rules", encoding="utf-8")
+            (root / "memory.md").write_text("user prefers concise replies", encoding="utf-8")
             harness = AgentHarness(
                 workspace=Workspace.local(tmpdir),
-                memory_files=[MemoryFile.project("AGENTS.md", kind="policy")],
+                memory_files=[
+                    MemoryFile.project("AGENTS.md", kind="policy"),
+                    MemoryFile.project("memory.md", kind="long_term"),
+                ],
             )
             agent = Agent(name="echo", instructions="echo", model="echo")
             result = await Runner.run(agent, "hello", config=RunConfig(harness=harness))
             self.assertIn("AGENTS.md", result.metadata["memory_files"][0])
+            loaded = await harness.load_context()
+            self.assertIn("AGENTS.md", loaded.policy_memories)
+            self.assertIn("memory.md", loaded.long_term_memories)
+
+    async def test_harness_composes_model_instructions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "AGENTS.md").write_text("always-on rules", encoding="utf-8")
+            (root / ".skills").mkdir()
+            (root / ".skills" / "demo").mkdir()
+            (root / ".skills" / "demo" / "SKILL.md").write_text(
+                "---\nname: demo\ndescription: do the demo thing\n---\n# Demo\n",
+                encoding="utf-8",
+            )
+            harness = AgentHarness(
+                workspace=Workspace.local(tmpdir),
+                memory_files=[MemoryFile.project("AGENTS.md", kind="policy")],
+                skill_sources=[str(root / ".skills")],
+            )
+            loaded = await harness.load_context()
+            composed = harness.compose_instructions("base instructions", loaded)
+            self.assertIn("base instructions", composed)
+            self.assertIn("always-on rules", composed)
+            self.assertIn("demo | do the demo thing", composed)
 
     async def test_sqlite_session_round_trip(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

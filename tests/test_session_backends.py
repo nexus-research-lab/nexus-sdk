@@ -1,5 +1,4 @@
 import os
-import json
 import unittest
 from unittest.mock import patch
 

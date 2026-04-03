@@ -14,6 +14,7 @@ from ..control.guardrails import GuardrailConfig, GuardrailContext, GuardrailRes
 from ..runtime.harness import AgentHarness
 from ..providers import AnthropicProvider, AzureProvider, OpenAIProvider
 from ..providers.base import EchoModelProvider, ModelConfig, ModelRequest, ModelResponse
+from ..providers.factory import create_provider_from_env, get_default_provider_kind, parse_provider_model
 from .result import Artifact, CostBreakdown, MessageItem, RunResult, ToolCallRecord, UsageStats, UsageStep
 from .run_config import RunConfig
 from ..sessions import InMemorySession, Session
@@ -160,13 +161,13 @@ class Runner:
             name = model.name or "configured"
             return name, model.provider or EchoModelProvider(name)
         if isinstance(model, str):
-            if model.startswith("openai/"):
-                return model.split("/", 1)[1], OpenAIProvider()
-            if model.startswith("anthropic/"):
-                return model.split("/", 1)[1], AnthropicProvider()
-            if model.startswith("azure/"):
-                return model.split("/", 1)[1], AzureProvider()
-            return model, EchoModelProvider(model)
+            selection = parse_provider_model(model)
+            if selection.provider_kind == "raw":
+                return selection.model_name, EchoModelProvider(selection.model_name)
+            provider = create_provider_from_env(selection.provider_kind)
+            if provider is not None:
+                return selection.model_name, provider
+            return selection.model_name, EchoModelProvider(selection.model_name)
         return "configured", model
 
     @classmethod
@@ -461,10 +462,14 @@ class Runner:
         max_turns = config.max_turns or agent.max_turns or 4
         for turn in range(max_turns):
             model_name, provider = cls._resolve_model_provider(active_agent, config)
+            effective_instructions = harness.compose_instructions(
+                active_agent.resolve_instructions(run_context),
+                loaded,
+            )
             response = await provider.generate(
                 ModelRequest(
                     agent=active_agent,
-                    instructions=active_agent.resolve_instructions(run_context),
+                    instructions=effective_instructions,
                     latest_input=current_input,
                     history=all_messages,
                     tool_results=tool_records,

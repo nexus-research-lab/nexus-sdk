@@ -12,6 +12,10 @@ class SkillMetadata:
     tags: List[str] = field(default_factory=list)
     path: str = ""
 
+    @property
+    def skill_file(self) -> Path:
+        return Path(self.path) / "SKILL.md"
+
 
 def _parse_frontmatter(path: Path) -> Dict[str, str]:
     text = path.read_text(encoding="utf-8")
@@ -71,11 +75,27 @@ class SkillManager:
                 )
         return found
 
+    def load_skill_content(self, skill: SkillMetadata) -> str:
+        return skill.skill_file.read_text(encoding="utf-8")
+
+    def summarize(self, skills: Iterable[SkillMetadata]) -> List[str]:
+        summaries: List[str] = []
+        for skill in skills:
+            parts = [skill.name]
+            if skill.description:
+                parts.append(skill.description)
+            if skill.tags:
+                parts.append("tags=%s" % ", ".join(skill.tags))
+            summaries.append(" | ".join(parts))
+        return summaries
+
     async def search(self, query: str, tags: Optional[List[str]] = None) -> List[SkillMetadata]:
         tags = tags or []
+        if not self.platform_registry:
+            return []
         return [
             skill
-            for skill in self.discover([])
+            for skill in self.discover([self.platform_registry])
             if query.lower() in skill.name.lower()
             and (not tags or set(tags).issubset(set(skill.tags)))
         ]
