@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Iterable, List, Optional
 
-from .tool import ToolRegistry
+from ..control.tool import ToolRegistry
 
 
 @dataclass

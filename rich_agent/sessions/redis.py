@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
-from ..result import MessageItem
+from ..core.result import MessageItem
 from .base import Session
 
 

@@ -1,7 +1,7 @@
 import unittest
 
 from rich_agent import Agent, ModelConfig, MessageItem
-from rich_agent.models import AnthropicProvider, OpenAIProvider
+from rich_agent.providers import AnthropicProvider, OpenAIProvider
 
 
 class FakeOpenAIResponses:
@@ -60,7 +60,7 @@ class FakeAnthropicResponse:
 class ProviderTests(unittest.IsolatedAsyncioTestCase):
     async def test_openai_provider_builds_function_tools_and_parses_output(self) -> None:
         from rich_agent import tool
-        from rich_agent.models import ModelRequest
+        from rich_agent.providers import ModelRequest
 
         @tool(description="Add two integers")
         def add(a: int, b: int) -> int:
@@ -86,7 +86,7 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.usage["input_tokens"], 11)
 
     async def test_openai_provider_uses_model_config_name(self) -> None:
-        from rich_agent.models import ModelConfig, ModelRequest
+        from rich_agent.providers import ModelConfig, ModelRequest
 
         client = FakeOpenAIClient()
         provider = OpenAIProvider(client=client)
@@ -99,7 +99,7 @@ class ProviderTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_anthropic_provider_formats_tool_result_messages(self) -> None:
         from rich_agent import tool
-        from rich_agent.models import ModelRequest
+        from rich_agent.providers import ModelRequest
 
         @tool(description="Lookup data")
         def lookup(query: str) -> str:

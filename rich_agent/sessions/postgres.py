@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, List, Optional
 
-from ..result import MessageItem
+from ..core.result import MessageItem
 from .base import Session
 
 

@@ -1,4 +1,4 @@
-# Rich Agent SDK
+# Nexus SDK
 
 基于 `rich-agent-sdk-specification-v1` 的 Python SDK 起步版本。
 
@@ -39,15 +39,25 @@ cp .env.example .env
 ```text
 nexus-sdk/
 ├── rich_agent/
+│   ├── core/        # Agent / Runner / Event / Result / Error
+│   ├── providers/   # OpenAI / Anthropic / Azure / Gateway
+│   ├── runtime/     # Harness / Workspace / Sandbox / Hooks / Tracing
+│   ├── control/     # Tool / Approval / Guardrail / Router / Handoff
+│   ├── resources/   # MCP / Skill / Memory / Knowledge / Todo
+│   ├── config/      # Permission / Quota / Tenancy
+│   ├── sessions/    # Memory / SQLite / Redis / Postgres / Encrypted
+│   └── *.py         # Backward-compatible re-export shims
 ├── examples/
 └── tests/
 ```
+
+实现已经按层拆开；顶层 `rich_agent/*.py` 主要用于兼容旧 import，不建议继续把新实现直接堆在根目录。
 
 ## Quickstart
 
 ```python
 from rich_agent import Agent, ModelConfig, Runner, tool
-from rich_agent.models import ModelResponse, ModelToolCall
+from rich_agent.providers import ModelResponse, ModelToolCall
 
 
 @tool(description="Add two integers")
@@ -81,7 +91,7 @@ print(result.final_output)
 
 ```python
 from rich_agent import Agent, ModelConfig, Runner
-from rich_agent.models import AnthropicProvider, AzureProvider, OpenAIProvider
+from rich_agent.providers import AnthropicProvider, AzureProvider, OpenAIProvider
 
 openai_agent = Agent(
     name="openai-agent",
@@ -114,7 +124,7 @@ azure_agent = Agent(
 也可以直接从环境变量构建 provider：
 
 ```python
-from rich_agent.models import AnthropicProvider, AzureProvider, OpenAIProvider
+from rich_agent.providers import AnthropicProvider, AzureProvider, OpenAIProvider
 
 openai_provider = OpenAIProvider.from_env()
 anthropic_provider = AnthropicProvider.from_env()

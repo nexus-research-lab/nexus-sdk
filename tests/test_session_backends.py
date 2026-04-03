@@ -3,9 +3,8 @@ import json
 import unittest
 from unittest.mock import patch
 
-from rich_agent.models import AnthropicProvider, AzureProvider, OpenAIProvider
-from rich_agent.models.base import none_if_blank
-from rich_agent.result import MessageItem
+from rich_agent.core.result import MessageItem
+from rich_agent.providers import AnthropicProvider, AzureProvider, OpenAIProvider, none_if_blank
 from rich_agent.sessions import RedisSession
 
 

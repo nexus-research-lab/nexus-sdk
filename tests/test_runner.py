@@ -14,7 +14,7 @@ from rich_agent import (
     Workspace,
     tool,
 )
-from rich_agent.models import ModelResponse, ModelToolCall
+from rich_agent.providers import ModelResponse, ModelToolCall
 from rich_agent.sessions import EncryptedSession, InMemorySession, SQLiteSession
 
 

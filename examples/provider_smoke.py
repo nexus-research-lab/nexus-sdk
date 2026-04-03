@@ -5,7 +5,7 @@ import os
 import sys
 
 from rich_agent import Agent, ModelConfig, Runner
-from rich_agent.models import AnthropicProvider, AzureProvider, OpenAIProvider
+from rich_agent.providers import AnthropicProvider, AzureProvider, OpenAIProvider
 
 
 def load_local_env() -> None:

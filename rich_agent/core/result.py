@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
-from .todos import TodoItem
+from ..resources.todos import TodoItem
 
 
 @dataclass

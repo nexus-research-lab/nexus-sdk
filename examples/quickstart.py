@@ -1,5 +1,5 @@
 from rich_agent import Agent, ModelConfig, Runner, tool
-from rich_agent.models import ModelResponse, ModelToolCall
+from rich_agent.providers import ModelResponse, ModelToolCall
 
 
 @tool(description="Add two integers")

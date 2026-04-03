@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from .permissions import BudgetConfig, PermissionScope, RetryPolicy
+from ..config.permissions import BudgetConfig, PermissionScope, RetryPolicy
 
 
 InstructionsType = Union[str, Callable[[Any], str]]
@@ -31,7 +31,7 @@ class Agent:
 
     def as_tool(self, name: Optional[str] = None, description: Optional[str] = None):
         from .runner import Runner
-        from .tool import ToolSpec
+        from ..control.tool import ToolSpec
 
         async def invoke_subagent(input: Any = None, **kwargs: Any) -> Any:
             child_input = input if input is not None else kwargs

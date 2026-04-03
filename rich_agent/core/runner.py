@@ -7,18 +7,18 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from .agent import Agent
-from .approvals import ApprovalDecision, ApprovalRequest
+from ..control.approvals import ApprovalDecision, ApprovalRequest
 from .events import RunEvent
 from .errors import ApprovalRequiredError, GuardrailTrippedError, PermissionDeniedError, RunTimeoutError
-from .guardrails import GuardrailConfig, GuardrailContext, GuardrailResult, GuardrailSpec
-from .harness import AgentHarness
-from .models import AnthropicProvider, AzureProvider, OpenAIProvider
-from .models.base import EchoModelProvider, ModelConfig, ModelRequest, ModelResponse
+from ..control.guardrails import GuardrailConfig, GuardrailContext, GuardrailResult, GuardrailSpec
+from ..runtime.harness import AgentHarness
+from ..providers import AnthropicProvider, AzureProvider, OpenAIProvider
+from ..providers.base import EchoModelProvider, ModelConfig, ModelRequest, ModelResponse
 from .result import Artifact, CostBreakdown, MessageItem, RunResult, ToolCallRecord, UsageStats, UsageStep
 from .run_config import RunConfig
-from .sessions import InMemorySession, Session
-from .tool import ToolContext, ToolRegistry, ToolSpec
-from .workspace import Workspace
+from ..sessions import InMemorySession, Session
+from ..control.tool import ToolContext, ToolRegistry, ToolSpec
+from ..runtime.workspace import Workspace
 
 
 def _estimate_tokens(value: Any) -> int:

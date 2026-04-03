@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from .approvals import ApprovalHandler
-from .memory import MemoryFile
+from ..control.approvals import ApprovalHandler
+from ..resources.memory import MemoryFile
 from .sandbox import SandboxManager
-from .skills import SkillManager, SkillMetadata
-from .todos import SessionTodoStore, TodoItem
+from ..resources.skills import SkillManager, SkillMetadata
+from ..resources.todos import SessionTodoStore, TodoItem
 from .workspace import Workspace
 
 

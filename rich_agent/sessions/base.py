@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from uuid import uuid4
 
-from ..result import MessageItem
+from ..core.result import MessageItem
 
 
 class Session(ABC):

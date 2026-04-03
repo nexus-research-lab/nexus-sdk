@@ -1,5 +1,5 @@
 from rich_agent import Agent, ModelConfig, RunConfig, Runner
-from rich_agent.models import OpenAIProvider
+from rich_agent.providers import OpenAIProvider
 from rich_agent.sessions import SQLiteSession
 
 

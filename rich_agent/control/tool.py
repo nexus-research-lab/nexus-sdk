@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from fnmatch import fnmatch
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union, get_args, get_origin
 
-from .errors import ToolExecutionError
+from ..core.errors import ToolExecutionError
 
 
 @dataclass
